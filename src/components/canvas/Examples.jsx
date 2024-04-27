@@ -6,20 +6,22 @@ import * as THREE from 'three'
 import { useMemo, useRef, useState } from 'react'
 import { Line, useCursor, MeshDistortMaterial } from '@react-three/drei'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion-3d'
 
 export const Blob = ({ route = '/', ...props }) => {
   const router = useRouter()
   const [hovered, hover] = useState(false)
   useCursor(hovered)
   return (
-    <mesh
+    <motion.mesh
       onClick={() => router.push(route)}
       onPointerOver={() => hover(true)}
       onPointerOut={() => hover(false)}
-      {...props}>
+      {...props}
+    >
       <sphereGeometry args={[1, 64, 64]} />
       <MeshDistortMaterial roughness={0.5} color={hovered ? 'hotpink' : '#1fb2f5'} />
-    </mesh>
+    </motion.mesh>
   )
 }
 
@@ -64,5 +66,10 @@ export function Duck(props) {
 export function Dog(props) {
   const { scene } = useGLTF('/dog.glb')
 
+  return <primitive object={scene} {...props} />
+}
+
+export function Car(props) {
+  const { scene } = useGLTF('/car.glb')
   return <primitive object={scene} {...props} />
 }
