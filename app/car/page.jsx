@@ -1,63 +1,43 @@
 'use client'
-import * as THREE from 'three'
-import React, { useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import React, { Suspense, useRef } from 'react'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import {
+  CubeCamera,
+  Environment,
+  OrbitControls,
+  useDepthBuffer,
+  Loader,
+  ScrollControls,
+  useScroll,
+} from '@react-three/drei'
 import { getProject, val } from '@theatre/core'
 import studio from '@theatre/studio'
 import extension from '@theatre/r3f/dist/extension'
 import { editable as e, SheetProvider, PerspectiveCamera, useCurrentSheet } from '@theatre/r3f'
-import {
-  Environment,
-  Lightformer,
-  ContactShadows,
-  OrbitControls,
-  useTexture,
-  ScrollControls,
-  useScroll,
-  Billboard,
-  Loader,
-  Stars,
-  MeshReflectorMaterial,
-  CubeCamera,
-  Eff,
-} from '@react-three/drei'
-import { Suspense } from 'react'
-import { EffectComposer, DepthOfField, Bloom, ChromaticAberration } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
-import { suspend } from 'suspend-react'
-import { Effects } from './Effects'
-import { Lamborghini } from './Lamborghini'
+import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing'
+import { ToneMappingMode, BlendFunction } from 'postprocessing'
+
+import { Planet } from './Planet'
+import { Ground } from './Ground'
 import { FloatingGrid } from './FloatingGrid'
-import Ground from './Ground'
-const city = import('@pmndrs/assets/hdri/city.exr').then((module) => module.default)
+import { Car } from './Car'
+import { Rings } from './Rings'
+import { Boxes } from './Boxes'
+
+import { Spotlight } from './effects/Spotlight'
+import { Lightformers } from './effects/Lightformers'
+import { CameraRig } from './effects/CameraRig'
+
 studio.initialize()
 studio.extend(extension)
 
 const sequenceOnScroll = false
+const spotlight = false
+const ambientLight = true
+const lightFormers = false
 
-export default function CarPage() {
-  const sheet = getProject('Lambo Landing').sheet('Content')
-  return (
-    <main className='h-screen bg-[#15151a]'>
-      <Suspense fallback={null}>
-        <Canvas
-          gl={{ logarithmicDepthBuffer: true, antialias: false, preserveDrawingBuffer: true }}
-          shadows
-          className=''
-        >
-          <ScrollControls enabled={sequenceOnScroll} pages={5} damping={0.4} maxSpeed={0.3}>
-            <SheetProvider sheet={sheet}>
-              <Scene />
-            </SheetProvider>
-          </ScrollControls>
-        </Canvas>
-      </Suspense>
-      <Loader />
-    </main>
-  )
-}
-
-export function Scene() {
+function Scene() {
+  const depthBuffer = useDepthBuffer({ frames: 1, size: 1000 })
   const sheet = useCurrentSheet()
   const scroll = useScroll()
 
@@ -68,52 +48,52 @@ export function Scene() {
   })
   return (
     <>
-      <color attach='background' args={[0, 0, 0]} />
-      <PerspectiveCamera theatreKey='Camera' makeDefault position={[0, 0, 70]} fov={50} />
+      {!sequenceOnScroll && <OrbitControls />}
+
+      <PerspectiveCamera theatreKey='Camera' makeDefault fov={50} position={[3, 2, 5]} />
+
+      <color args={[0, 0, 0]} attach='background' />
       <CubeCamera resolution={256} frames={Infinity}>
         {(texture) => (
           <>
             <Environment map={texture} />
-            <Lamborghini scale={0.005} />
+            <Car />
           </>
         )}
       </CubeCamera>
+
+      {spotlight && <Spotlight depthBuffer={depthBuffer} color='#fff' position={[2, 4, 0]} />}
+      {ambientLight && <ambientLight intensity={0.5} />}
+      {lightFormers && <Lightformers />}
       <Ground />
-      <e.spotLight
-        theatreKey='SpotLight1'
-        color={[1, 0.25, 0.7]}
-        intensity={1.5}
-        angle={0.6}
-        penumbra={0.5}
-        position={[5, 5, 0]}
-        castShadow
-        shadow-bias={-0.0001}
-      />
-      <e.spotLight
-        theatreKey='SpotLight2'
-        color={[0.14, 0.5, 1]}
-        intensity={2}
-        angle={0.6}
-        penumbra={0.5}
-        position={[-5, 5, 0]}
-        castShadow
-        shadow-bias={-0.0001}
-      />
-      <FloatingGrid />
+      <Planet />
+
+      {/*
+      <CameraRig />
+      */}
+      <EffectComposer disableNormalPass>
+        <Bloom mipmapBlur luminanceThreshold={1} blendFunction={BlendFunction.LIGHTEN} levels={8} intensity={0.4 * 4} />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
     </>
   )
 }
 
-const Moon = ({ props }) => {
-  const [colorMap, displacementMap, normalMap] = useTexture([
-    '/earth/color.jpg',
-    '/earth/occlusion.jpg',
-    '/earth/normal.png',
-  ])
+export default function CarPage() {
+  const sheet = getProject('Car Page').sheet('Content')
   return (
-    <e.mesh theatreKey='Moon' position={[0, 0, -540]} {...props}>
-      <sphereGeometry args={[10, 10, 10]} />
-      <meshStandardMaterial map={colorMap} normalMap={normalMap} occlusionMap={displacementMap} />
-    </e.mesh>
+    <main className='h-screen bg-[#15151a]'>
+      <Canvas shadows gl={{ preserveDrawingBuffer: true }}>
+        <Suspense fallback={null}>
+          <ScrollControls enabled={sequenceOnScroll} pages={5} damping={0.4} maxSpeed={0.3}>
+            <SheetProvider sheet={sheet}>
+              <Scene />
+            </SheetProvider>
+          </ScrollControls>
+        </Suspense>
+      </Canvas>
+
+      <Loader />
+    </main>
   )
 }

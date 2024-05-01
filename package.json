@@ -28,6 +28,7 @@
     "framer-motion": "^11.1.7",
     "framer-motion-3d": "^11.1.7",
     "glsl-random": "^0.0.5",
+    "lamina": "^1.1.23",
     "leva": "^0.9.35",
     "next": "^14.0.4",
     "postprocessing": "^6.35.4",

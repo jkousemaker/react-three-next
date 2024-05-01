@@ -1,11 +1,14 @@
-'use client'
-import { editable as e } from '@theatre/r3f'
 import React, { useEffect } from 'react'
 import { useFrame, useLoader } from '@react-three/fiber'
-import { MeshReflectorMaterial, useTexture } from '@react-three/drei'
+import { MeshReflectorMaterial } from '@react-three/drei'
 import { LinearEncoding, RepeatWrapping, TextureLoader } from 'three'
-export default function Ground({ props }) {
-  const [roughness, normal] = useTexture(['/car/textures/terrain-roughness.jpg', '/car/textures/terrain-normal.jpg'])
+
+export function Ground() {
+  // thanks to https://polyhaven.com/a/rough_plasterbrick_05 !
+  const [roughness, normal] = useLoader(TextureLoader, [
+    'textures/terrain-roughness.jpg',
+    'textures/terrain-normal.jpg',
+  ])
 
   useEffect(() => {
     ;[normal, roughness].forEach((t) => {
@@ -19,12 +22,13 @@ export default function Ground({ props }) {
   }, [normal, roughness])
 
   useFrame((state, delta) => {
-    let t = -state.clock.getElapsedTime() * 0.128
+    let t = -state.clock.getElapsedTime() * 0.512
     roughness.offset.set(0, t % 1)
     normal.offset.set(0, t % 1)
   })
+
   return (
-    <e.mesh rotation-x={-Math.PI * 0.5} castShadow receiveShadow theatreKey='Ground' {...props}>
+    <mesh rotation-x={-Math.PI * 0.5} castShadow receiveShadow>
       <planeGeometry args={[30, 30]} />
       <MeshReflectorMaterial
         envMapIntensity={0}
@@ -45,8 +49,8 @@ export default function Ground({ props }) {
         maxDepthThreshold={1} // Upper edge for the depthTexture interpolation (default = 0)
         depthToBlurRatioBias={0.25} // Adds a bias factor to the depthTexture before calculating the blur amount [blurFactor = blurTexture * (depthTexture + bias)]. It accepts values between 0 and 1, default is 0.25. An amount > 0 of bias makes sure that the blurTexture is not too sharp because of the multiplication with the depthTexture
         debug={0}
-        reflectorOffset={0.2}
+        reflectorOffset={0.2} // Offsets the virtual camera that projects the reflection. Useful when the reflective surface is some distance from the object's origin (default = 0)
       />
-    </e.mesh>
+    </mesh>
   )
 }
