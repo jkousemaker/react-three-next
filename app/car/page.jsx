@@ -16,7 +16,7 @@ import extension from '@theatre/r3f/dist/extension'
 import { editable as e, SheetProvider, PerspectiveCamera, useCurrentSheet } from '@theatre/r3f'
 import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode, BlendFunction } from 'postprocessing'
-
+import { LensFlare } from '@react-three/postprocessing'
 import { Planet } from './Planet'
 import { Ground } from './Ground'
 import { FloatingGrid } from './FloatingGrid'
@@ -33,7 +33,8 @@ if (process.env.NODE_ENV === 'development') {
   studio.extend(extension)
 }
 
-const sequenceOnScroll = true
+const sequenceOnScroll = false
+const orbitControls = false
 const spotlight = false
 const ambientLight = true
 const lightFormers = false
@@ -50,11 +51,11 @@ function Scene() {
   })
   return (
     <>
-      {!sequenceOnScroll && <OrbitControls />}
+      {orbitControls && <OrbitControls />}
 
-      <PerspectiveCamera theatreKey='Camera' makeDefault fov={50} position={[3, 2, 5]} />
+      <PerspectiveCamera theatreKey='Camera' makeDefault fov={50} position={[0, 2.5, 13]} />
 
-      <color args={[0, 0, 0]} attach='background' />
+      <color args={['#09090a']} attach='background' />
       <CubeCamera resolution={256} frames={Infinity}>
         {(texture) => (
           <>
@@ -68,6 +69,7 @@ function Scene() {
       {ambientLight && <ambientLight intensity={0.5} />}
       {lightFormers && <Lightformers />}
       <Ground />
+
       <Planet />
 
       {/*
@@ -82,9 +84,9 @@ function Scene() {
 }
 
 export default function CarPage() {
-  const sheet = getProject('Car Page').sheet('Content')
+  const sheet = getProject('First Scene').sheet('Content')
   return (
-    <main className='h-screen bg-[#15151a]'>
+    <main className='h-screen bg-[#09090a]'>
       <Canvas shadows gl={{ preserveDrawingBuffer: true }}>
         <Suspense fallback={null}>
           <ScrollControls enabled={sequenceOnScroll} pages={5} damping={0.4} maxSpeed={0.3}>
