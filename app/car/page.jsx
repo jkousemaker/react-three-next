@@ -31,7 +31,7 @@ import { CameraRig } from './effects/CameraRig'
 studio.initialize()
 studio.extend(extension)
 
-const sequenceOnScroll = false
+const sequenceOnScroll = true
 const spotlight = false
 const ambientLight = true
 const lightFormers = false
