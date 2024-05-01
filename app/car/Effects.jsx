@@ -6,7 +6,7 @@ import { LUTCubeLoader } from 'postprocessing'
 
 export function Effects() {
   const texture = useLoader(LUTCubeLoader, '/F-6800-STD.cube')
-  const { enabled, ...props } = useControls({
+  const props = {
     enabled: true,
     temporalResolve: true,
     STRETCH_MISSED_RAYS: true,
@@ -37,13 +37,10 @@ export function Effects() {
     maxDepth: { value: 1, min: 0, max: 1 },
     thickness: { value: 3, min: 0, max: 10 },
     ior: { value: 1.45, min: 0, max: 2 },
-  })
+  }
   return (
-    enabled && (
+    props.enabled && (
       <EffectComposer disableNormalPass>
-        {
-          //<SSR {...props} />
-        }
         <Bloom luminanceThreshold={0.2} mipmapBlur luminanceSmoothing={0} intensity={1.75} />
         <LUT lut={texture} />
       </EffectComposer>

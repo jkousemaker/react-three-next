@@ -2,87 +2,104 @@
 import * as THREE from 'three'
 import React, { useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { getProject } from '@theatre/core'
+import { getProject, val } from '@theatre/core'
 import studio from '@theatre/studio'
 import extension from '@theatre/r3f/dist/extension'
-import { editable as e, SheetProvider, PerspectiveCamera } from '@theatre/r3f'
-import { Environment, Lightformer, ContactShadows, OrbitControls, useTexture } from '@react-three/drei'
+import { editable as e, SheetProvider, PerspectiveCamera, useCurrentSheet } from '@theatre/r3f'
+import {
+  Environment,
+  Lightformer,
+  ContactShadows,
+  OrbitControls,
+  useTexture,
+  ScrollControls,
+  useScroll,
+  Billboard,
+  Loader,
+  Stars,
+  MeshReflectorMaterial,
+  CubeCamera,
+  Eff,
+} from '@react-three/drei'
+import { Suspense } from 'react'
+import { EffectComposer, DepthOfField, Bloom, ChromaticAberration } from '@react-three/postprocessing'
+import { BlendFunction } from 'postprocessing'
+import { suspend } from 'suspend-react'
 import { Effects } from './Effects'
 import { Lamborghini } from './Lamborghini'
-
+import { FloatingGrid } from './FloatingGrid'
+import Ground from './Ground'
+const city = import('@pmndrs/assets/hdri/city.exr').then((module) => module.default)
 studio.initialize()
 studio.extend(extension)
 
+const sequenceOnScroll = false
+
 export default function CarPage() {
+  const sheet = getProject('Lambo Landing').sheet('Content')
   return (
-    <Canvas
-      gl={{ logarithmicDepthBuffer: true, antialias: false, preserveDrawingBuffer: true }}
-      dpr={[1, 1.5]}
-      camera={{ position: [0, 0, 15], fov: 25 }}
-    >
-      <Scene />
-    </Canvas>
+    <main className='h-screen bg-[#15151a]'>
+      <Suspense fallback={null}>
+        <Canvas
+          gl={{ logarithmicDepthBuffer: true, antialias: false, preserveDrawingBuffer: true }}
+          shadows
+          className=''
+        >
+          <ScrollControls enabled={sequenceOnScroll} pages={5} damping={0.4} maxSpeed={0.3}>
+            <SheetProvider sheet={sheet}>
+              <Scene />
+            </SheetProvider>
+          </ScrollControls>
+        </Canvas>
+      </Suspense>
+      <Loader />
+    </main>
   )
 }
 
 export function Scene() {
+  const sheet = useCurrentSheet()
+  const scroll = useScroll()
+
+  useFrame(() => {
+    if (!sequenceOnScroll) return
+    const sequenceLength = val(sheet.sequence.pointer.length)
+    sheet.sequence.position = scroll.offset * sequenceLength >= 0 ? scroll.offset * sequenceLength : 0
+  })
   return (
     <>
-      <SheetProvider sheet={getProject('Lambo showcase').sheet('Lambo showcase')}>
-        <color attach='background' args={['#15151a']} />
-        <Moon />
-        <Lamborghini rotation={[0, Math.PI / 1.5, 0]} scale={0.015} />
-        <hemisphereLight intensity={0.5} />
-        <ContactShadows
-          resolution={1024}
-          frames={1}
-          position={[0, -1.16, 0]}
-          scale={15}
-          blur={0.5}
-          opacity={1}
-          far={20}
-        />
-        <mesh scale={4} position={[3, -1.161, -1.5]} rotation={[-Math.PI / 2, 0, Math.PI / 2.5]}>
-          <ringGeometry args={[0.9, 1, 4, 1]} />
-          <meshStandardMaterial color='white' roughness={0.75} />
-        </mesh>
-        <mesh scale={4} position={[-3, -1.161, -1]} rotation={[-Math.PI / 2, 0, Math.PI / 2.5]}>
-          <ringGeometry args={[0.9, 1, 3, 1]} />
-          <meshStandardMaterial color='white' roughness={0.75} />
-        </mesh>
-        {/* We're building a cube-mapped environment declaratively.
-          Anything you put in here will be filmed (once) by a cubemap-camera
-          and applied to the scenes environment, and optionally background. */}
-        <Environment resolution={512}>
-          {/* Ceiling */}
-          <Lightformer intensity={20} rotation-x={Math.PI / 2} position={[0, 4, -9]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, -6]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, -3]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, 0]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, 3]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, 6]} scale={[10, 1, 1]} />
-          <Lightformer intensity={2} rotation-x={Math.PI / 2} position={[0, 4, 9]} scale={[10, 1, 1]} />
-          {/* Sides */}
-          <Lightformer intensity={2} rotation-y={Math.PI / 2} position={[-50, 2, 0]} scale={[100, 2, 1]} />
-          <Lightformer intensity={2} rotation-y={-Math.PI / 2} position={[50, 2, 0]} scale={[100, 2, 1]} />
-          {/* Key */}
-          <Lightformer
-            form='ring'
-            color='red'
-            intensity={10}
-            scale={2}
-            position={[10, 5, 10]}
-            onUpdate={(self) => self.lookAt(0, 0, 0)}
-          />
-        </Environment>
-        <Effects />
-        <OrbitControls
-          enablePan={false}
-          enableZoom={false}
-          minPolarAngle={Math.PI / 2.2}
-          maxPolarAngle={Math.PI / 2.2}
-        />
-      </SheetProvider>
+      <color attach='background' args={[0, 0, 0]} />
+      <PerspectiveCamera theatreKey='Camera' makeDefault position={[0, 0, 70]} fov={50} />
+      <CubeCamera resolution={256} frames={Infinity}>
+        {(texture) => (
+          <>
+            <Environment map={texture} />
+            <Lamborghini scale={0.005} />
+          </>
+        )}
+      </CubeCamera>
+      <Ground />
+      <e.spotLight
+        theatreKey='SpotLight1'
+        color={[1, 0.25, 0.7]}
+        intensity={1.5}
+        angle={0.6}
+        penumbra={0.5}
+        position={[5, 5, 0]}
+        castShadow
+        shadow-bias={-0.0001}
+      />
+      <e.spotLight
+        theatreKey='SpotLight2'
+        color={[0.14, 0.5, 1]}
+        intensity={2}
+        angle={0.6}
+        penumbra={0.5}
+        position={[-5, 5, 0]}
+        castShadow
+        shadow-bias={-0.0001}
+      />
+      <FloatingGrid />
     </>
   )
 }
