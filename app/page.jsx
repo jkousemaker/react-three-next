@@ -79,6 +79,9 @@ export default function Page() {
         <Link href='/car' className='my-10 text-7xl font-bold tracking-tight'>
           Visit 3D space
         </Link>
+        <Link href='/diamond' className='my-10 text-7xl font-bold tracking-tight'>
+          Visit Diamond
+        </Link>
       </div>
     </>
   )
