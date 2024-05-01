@@ -28,8 +28,10 @@ import { Spotlight } from './effects/Spotlight'
 import { Lightformers } from './effects/Lightformers'
 import { CameraRig } from './effects/CameraRig'
 
-studio.initialize()
-studio.extend(extension)
+if (process.env.NODE_ENV === 'development') {
+  studio.initialize()
+  studio.extend(extension)
+}
 
 const sequenceOnScroll = true
 const spotlight = false
