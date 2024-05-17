@@ -1,18 +1,18 @@
 'use client'
-import React from 'react'
+import React, { use, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import { editable as e } from '@theatre/r3f'
 
-export function Planet({ props }) {
+export function Planet(props) {
   return (
     <>
-      <Model props={{ props }} />
+      <Model props={props} />
     </>
   )
 }
 
-function Model({ props }) {
+function Model(props) {
   const [colorMap, displacementMap, normalMap] = useTexture([
     '/earth/color.jpg',
     '/earth/occlusion.jpg',

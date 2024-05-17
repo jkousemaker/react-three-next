@@ -2,12 +2,9 @@
 import { useRef } from 'react'
 import { useLoader } from '@react-three/fiber'
 import { useGLTF, Caustics, CubeCamera, MeshRefractionMaterial } from '@react-three/drei'
-import { useControls } from 'leva'
 import { RGBELoader } from 'three-stdlib'
-import extension from '@theatre/r3f/dist/extension'
-import { editable as e, SheetProvider, PerspectiveCamera } from '@theatre/r3f'
 
-export function Diamond(props) {
+export default function Diamond(props) {
   const ref = useRef()
   const { nodes } = useGLTF('/dflat.glb')
   // Use a custom envmap/scene-backdrop for the diamond material
@@ -37,9 +34,9 @@ export function Diamond(props) {
           backfaceIor={1.1}
           intensity={0.1}
         >
-          <e.mesh theatreKey='diamond' castShadow ref={ref} geometry={nodes.Diamond_1_0.geometry} {...props}>
+          <mesh castShadow ref={ref} geometry={nodes.Diamond_1_0.geometry} {...props}>
             <MeshRefractionMaterial envMap={texture} {...config} toneMapped={false} />
-          </e.mesh>
+          </mesh>
         </Caustics>
       )}
     </CubeCamera>
